@@ -1,0 +1,1 @@
+electron-packager.cmd --overwrite --icon=shuttlecock.ico .

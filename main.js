@@ -12,8 +12,7 @@ function createWindow() {
     win.loadFile('index.html');
     win.setMenu(null);
     win.maximize();
-
-    win.webContents.openDevTools();
+    win.setIcon("shuttlecock.png");
 }
 
 app.whenReady().then(createWindow);
