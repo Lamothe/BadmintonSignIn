@@ -4,7 +4,9 @@ const Excel = require('exceljs');
 const fs = require('fs');
 const $ = require('jquery');
 
-function formatDate() {
+const checkedString = "x";
+
+function getFormattedDateString() {
     var d = new Date(),
         month = '' + (d.getMonth() + 1),
         day = '' + d.getDate(),
@@ -19,6 +21,11 @@ function formatDate() {
     }
 
     return [year, month, day].join('-');
+}
+
+function getFileName() {
+    var dateString = getFormattedDateString();
+    return dateString + '.xlsx';
 }
 
 function loadNames(loaded) {
@@ -36,43 +43,66 @@ function loadNames(loaded) {
     });
 }
 
+function load(loaded) {
+    var workbook = new Excel.Workbook();
+    workbook.xlsx.readFile(getFileName())
+        .then(function () {
+            var worksheet = workbook.getWorksheet(getFormattedDateString());
+            worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+                if (rowNumber != 1) {
+                    let name = row.values[1];
+                    let checked = row.values[2] === checkedString;
+                    addAttendee(name, checked);
+                }
+            });
+
+            loaded();
+        });
+}
+
 function save() {
-    let dateString = formatDate();
+
     let workbook = new Excel.Workbook();
-    let worksheet = workbook.addWorksheet(dateString);
+    let worksheet = workbook.addWorksheet(getFormattedDateString());
     worksheet.columns = [
         { header: "Name", key: "name", width: "50" },
         { header: "Signed In", key: "checked" }
     ];
     worksheet.getRow(1).font = { bold: true };
 
-    loadNames(function (names) {
-        names.forEach(function (name, i) {
-            worksheet.addRow({
-                name: name,
-                checked: 'x'
-            });
+    $("#attendeeTable tr").each(function (i, row) {
+        let name = $(".name", row).text();
+        let checked = $(".check", row).prop("checked");
+        worksheet.addRow({
+            name: name,
+            checked: checked ? checkedString : ""
         });
-
-        workbook.xlsx.writeFile(dateString + '.xlsx');
-
-        console.log("File saved");
     });
+
+    workbook.xlsx.writeFile(getFileName());
+    console.log("File saved");
 }
 
 function init() {
-    loadNames(function (names) {
-        names.forEach(function (name, i) {
-            addAttendee(name);
+    if (fs.existsSync(getFileName())) {
+        load(function () {
+            $(".check").on("change", save);
         });
-        $(".check").on("change", save);
-        save();
-    });
+    }
+    else {
+        loadNames(function (names) {
+            names.forEach(function (name, i) {
+                addAttendee(name, false);
+            });
+            $(".check").on("change", save);
+            save();
+        });
+    }
 }
 
-function addAttendee(name) {
+function addAttendee(name, checked) {
     $("#attendeeTable")
-        .append("<tr><td><input type='checkbox' class='check'></td><td class='name'>" + name + "</td></tr>");
+        .append("<tr><td><input type='checkbox'" + (checked ? " checked" : "") + " class='check'></td><td class='name'>" + name + "</td></tr>");
 }
 
 $(function () {
