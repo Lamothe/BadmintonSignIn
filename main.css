@@ -1,0 +1,21 @@
+html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 30px;
+    background-color: #fff;
+}
+
+input[type=checkbox] {
+    transform: scale(2);
+}
+
+#attendeeTable {
+    width: 100%;
+}
+
+#attendeeTable .name {
+    padding: 10px 0 0 10px;
+}
+
+#attendeeTable tr:nth-child(even) {
+    background-color: #eee;
+}
